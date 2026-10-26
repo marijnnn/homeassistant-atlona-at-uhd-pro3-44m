@@ -36,6 +36,8 @@ async def async_get_config_entry_diagnostics(
             else None,
             "supports_statusx5": client.supports_statusx5,
         },
+        # '#*PORTn' link pulses per output (display re-handshake), since startup.
+        "output_link_pulses": client.port_events,
         "state": {
             "power": data.power if data else None,
             "routing_output_to_input": data.routing if data else None,

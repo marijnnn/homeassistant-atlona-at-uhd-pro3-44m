@@ -36,6 +36,10 @@ INTER_COMMAND_DELAY = 0.05
 _ROUTE_TOKEN_RE = re.compile(r"^x(\d+)AVx(\d+)$")
 _OUTPUT_TOKEN_RE = re.compile(r"^x(\d+)$")
 _ALL_RE = re.compile(r"^x(\d+)All$")
+# Output link pulse, verified on the device: '#*PORT1_[\x00]' then ~1.5 s later
+# '#*PORT1_[\xff]' when the display on that output re-handshakes (TV on/off,
+# but also spontaneously). Not a usable on/off state, kept for diagnostics.
+_PORT_RE = re.compile(r"^#\*PORT(\d+)_\[(.)\]$", re.DOTALL)
 _ENABLE_RE = re.compile(r"^x(\d+)\$\s*(on|off)$", re.IGNORECASE)
 NUM_SWITCHABLE_OUTPUTS = 5  # x?$ works on outputs 1..5 (verified on the device)
 _FAILED = "command failed"
@@ -154,6 +158,12 @@ class _TelnetFilter:
                 self._pending = buf[i:]
                 break
             cmd = buf[i + 1]
+            if cmd < _SE:
+                # Not a Telnet command: the matrix sends raw bytes such as
+                # '#*PORT1_[\xff]'. Keep 0xFF as data.
+                out.append(b)
+                i += 1
+                continue
             if cmd == _IAC:
                 out.append(_IAC)
                 i += 2
@@ -195,10 +205,13 @@ class AtlonaClient:
         self.state = AtlonaState()
         self.supports_statusx5: bool | None = None
         self.on_unsolicited: Callable[[], None] | None = None
+        self.on_connection_lost: Callable[[], None] | None = None
 
         # Last TX/RX lines, for the diagnostics download.
         self.history: collections.deque[tuple[str, str, str]] = collections.deque(maxlen=100)
         self.connect_count = 0
+        # output -> {"pulses": n, "last": iso time, "value": last byte}
+        self.port_events: dict[int, dict] = {}
         self.last_error: str | None = None
 
         self._reader: asyncio.StreamReader | None = None
@@ -265,7 +278,7 @@ class AtlonaClient:
         clean, reply = self._filter.feed(data)
         if reply and self._writer is not None:
             self._writer.write(reply)
-        text = clean.decode("ascii", errors="ignore")
+        text = clean.decode("latin-1")  # keep raw bytes (e.g. 0x00/0xFF in #*PORT messages)
         _LOGGER.debug("RX %r", text)
         self._buffer += text
         parts = re.split(r"\r\n|\r|\n", self._buffer)
@@ -367,6 +380,11 @@ class AtlonaClient:
             writer, self._writer, self._reader = self._writer, None, None
             if writer is not None:
                 writer.close()
+            if self.on_connection_lost:
+                try:
+                    self.on_connection_lost()
+                except Exception:  # noqa: BLE001
+                    _LOGGER.exception("Error in Atlona connection-lost callback")
 
     def _dispatch_lines(self) -> None:
         changed = False
@@ -407,6 +425,14 @@ class AtlonaClient:
         if (power := parse_power(line)) is not None:
             self.state.power = power
             return True
+        if m := _PORT_RE.match(line):
+            port = int(m.group(1))
+            ev = self.port_events.setdefault(port, {"pulses": 0, "last": None, "value": None})
+            ev["value"] = ord(m.group(2))
+            if ev["value"] == 0:
+                ev["pulses"] += 1
+                ev["last"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+            return False  # informational only
         if (enabled := parse_output_enabled(line)) and enabled[0] in self.state.output_enabled:
             self.state.output_enabled[enabled[0]] = enabled[1]
             return True

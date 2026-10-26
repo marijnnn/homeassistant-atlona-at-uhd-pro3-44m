@@ -85,5 +85,48 @@
       "empty_name": "Names cannot be empty.",
       "unknown": "Unexpected error, see the log."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "Connected",
+        "state_attributes": {
+          "last_communication": {
+            "name": "Last communication"
+          }
+        }
+      }
+    },
+    "button": {
+      "input_to_all": {
+        "name": "{input} to all outputs"
+      }
+    },
+    "select": {
+      "output": {
+        "state_attributes": {
+          "input": {
+            "name": "Input number"
+          },
+          "output": {
+            "name": "Output number"
+          }
+        }
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Power"
+      },
+      "output_video": {
+        "name": "{output} video"
+      }
+    }
+  },
+  "issues": {
+    "unreachable": {
+      "title": "Atlona matrix {name} is unreachable",
+      "description": "Home Assistant has not been able to reach the Atlona matrix at {host} for more than {minutes} minutes. Check that the matrix is powered and connected to the network, and that its IP address has not changed (Configure → Connection and polling). This message disappears automatically once the matrix answers again."
+    }
   }
 }

@@ -14,10 +14,14 @@ Tested against a real AT-UHD-PRO3-44M with firmware 16.1.19.
 | 5 × `select` (one per output) | Choose which input goes to that output (`x{in}AVx{out}`) |
 | 4 × `button` | Send one input to all outputs (`x{in}All`) |
 | `switch` Power | Power on / standby (`PWON` / `PWOFF`), state from `PWSTA` |
-| 5 × `switch` *<output> output* | Turn the video on an output on/off without standby (`x2$ on/off`) |
-| Diagnostic `sensor` Last communication | Time of the last successful poll or command |
+| 5 × `switch` *<output> video* | Turn the video on an output on/off without standby (`x2$ on/off`) |
+| Diagnostic `binary_sensor` Connected | On while the matrix answers; attribute *last communication* |
 
 Entities become **unavailable** when the matrix cannot be reached, and recover by themselves.
+If the matrix stays unreachable for more than 5 minutes, a warning appears under
+*Settings → Repairs*; it disappears automatically when the matrix is back.
+
+Entity names follow the Home Assistant language (English and Dutch included).
 
 ## Installation
 
@@ -88,6 +92,18 @@ logger:
 Every sent (`TX`) and received (`RX`) line is logged.
 
 ## Changelog
+
+### 1.7.0
+* New diagnostic **Connected** binary sensor. *Last communication* is now its
+  attribute instead of a separate timestamp sensor, so it no longer fills the
+  device's activity log every poll (and is not stored by the recorder).
+  The old timestamp sensor is removed automatically.
+* **Repairs warning** when the matrix is unreachable for more than 5 minutes.
+* Faster reconnect: a dropped Telnet session triggers an immediate refresh.
+* **Translated entity names** (English/Dutch): Power, "… video",
+  "… to all outputs", Connected.
+* Raw bytes from the matrix (`#*PORTn_[..]` link pulses, seen on the real
+  device) are kept intact and counted per output in the diagnostics download.
 
 ### 1.6.0
 * **Instant updates**: a background listener processes changes the matrix

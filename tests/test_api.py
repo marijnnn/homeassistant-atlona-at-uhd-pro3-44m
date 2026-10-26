@@ -232,3 +232,16 @@ async def test_reader_detects_drop_and_reconnects(socket_enabled):
         assert await c.get_power() is True
         assert c.connect_count == 2
     await (_with({}, fn))
+
+
+async def test_port_pulses_keep_raw_bytes(socket_enabled):
+    """Real device traffic: 0x00/0xFF inside '#*PORT1_[..]' is data, not Telnet IAC."""
+    async def fn(c, m):
+        await c.get_power()
+        await m.push_raw(b"#*PORT1_[\x00]\r\n#*PORT1_[\xff]\r\n#*PORT2_[\x00]\r\n#*PORT2_[\xff]\r\n")
+        await asyncio.sleep(0.1)
+        assert c.port_events[1] == {"pulses": 1, "last": c.port_events[1]["last"], "value": 255}
+        assert c.port_events[2]["pulses"] == 1
+        assert any(text == "#*PORT1_[\xff]" for _, _, text in c.history)
+        assert await c.get_power() is True
+    await (_with({}, fn))

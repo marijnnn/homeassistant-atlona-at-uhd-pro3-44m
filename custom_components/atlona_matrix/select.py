@@ -22,6 +22,7 @@ async def async_setup_entry(
 
 class AtlonaOutputSelect(AtlonaEntity, SelectEntity):
     _attr_icon = "mdi:video-input-hdmi"
+    _attr_translation_key = "output"  # translates the attribute names only
 
     def __init__(self, coordinator: AtlonaCoordinator, output: int) -> None:
         super().__init__(coordinator, f"output_{output}")

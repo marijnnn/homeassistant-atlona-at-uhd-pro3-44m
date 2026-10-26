@@ -85,5 +85,48 @@
       "empty_name": "Namen mogen niet leeg zijn.",
       "unknown": "Onverwachte fout, zie het logboek."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "Verbonden",
+        "state_attributes": {
+          "last_communication": {
+            "name": "Laatste communicatie"
+          }
+        }
+      }
+    },
+    "button": {
+      "input_to_all": {
+        "name": "{input} naar alle uitgangen"
+      }
+    },
+    "select": {
+      "output": {
+        "state_attributes": {
+          "input": {
+            "name": "Ingangsnummer"
+          },
+          "output": {
+            "name": "Uitgangsnummer"
+          }
+        }
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Aan/uit"
+      },
+      "output_video": {
+        "name": "{output} beeld"
+      }
+    }
+  },
+  "issues": {
+    "unreachable": {
+      "title": "Atlona-matrix {name} is onbereikbaar",
+      "description": "Home Assistant kan de Atlona-matrix op {host} al meer dan {minutes} minuten niet bereiken. Controleer of de matrix stroom en netwerk heeft en of het IP-adres niet is veranderd (Configureren → Verbinding en polling). Deze melding verdwijnt vanzelf zodra de matrix weer antwoordt."
+    }
   }
 }

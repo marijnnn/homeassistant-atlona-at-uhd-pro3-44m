@@ -7,6 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import issue_registry as ir
 
 from .api import AtlonaClient, AtlonaError
 from .const import (
@@ -27,7 +28,7 @@ PLATFORMS: list[Platform] = [
     Platform.SELECT,
     Platform.BUTTON,
     Platform.SWITCH,
-    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
 ]
 
 
@@ -71,8 +72,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AtlonaConfigEntry) -> bo
     return True
 
 
-# Sensors from v1.3.x - v1.4.2 that were merged into "Last communication".
-_OBSOLETE_SENSORS = ("status_timestamp", "power_timestamp")
+# Timestamp sensors from v1.3.x - v1.6.0. "Last communication" is now an
+# attribute of the "Connected" binary sensor (keeps the logbook clean).
+_OBSOLETE_SENSORS = ("status_timestamp", "power_timestamp", "communication_timestamp")
 
 
 def _remove_obsolete_entities(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -94,4 +96,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: AtlonaConfigEntry) -> b
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         await entry.runtime_data.client.close()
+        ir.async_delete_issue(hass, DOMAIN, entry.runtime_data.issue_id)
     return unload_ok

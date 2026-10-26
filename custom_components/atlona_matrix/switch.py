@@ -24,7 +24,7 @@ async def async_setup_entry(
 
 
 class AtlonaPowerSwitch(AtlonaEntity, SwitchEntity):
-    _attr_name = "Power"
+    _attr_translation_key = "power"
     _attr_icon = "mdi:power"
 
     def __init__(self, coordinator: AtlonaCoordinator) -> None:
@@ -47,7 +47,8 @@ class AtlonaOutputEnableSwitch(AtlonaEntity, SwitchEntity):
     def __init__(self, coordinator: AtlonaCoordinator, output: int) -> None:
         super().__init__(coordinator, f"output_{output}_enabled")
         self.output = output
-        self._attr_name = f"{coordinator.names[f'output_{output}']} output"
+        self._attr_translation_key = "output_video"
+        self._attr_translation_placeholders = {"output": coordinator.names[f"output_{output}"]}
 
     @property
     def icon(self) -> str:

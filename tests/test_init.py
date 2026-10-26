@@ -4,7 +4,10 @@ import asyncio
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from datetime import timedelta
+
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import issue_registry as ir
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.atlona_matrix.const import DOMAIN
@@ -53,8 +56,9 @@ async def test_setup_creates_entities(hass: HomeAssistant, mock_atlona) -> None:
     assert hass.states.get(eid(hass, "switch", entry, "power")).state == STATE_ON
     for output in range(1, 6):
         assert hass.states.get(eid(hass, "switch", entry, f"output_{output}_enabled")).state == STATE_ON
-    assert hass.states.get(eid(hass, "sensor", entry, "communication_timestamp")).state not in (
-        None, "unknown", STATE_UNAVAILABLE)
+    connected = hass.states.get(eid(hass, "binary_sensor", entry, "connected"))
+    assert connected.state == STATE_ON
+    assert connected.attributes["last_communication"]
     assert mock_atlona.broadcast is True  # instant updates enabled Broadcast
     await unload(hass, entry)
 
@@ -126,13 +130,14 @@ async def test_obsolete_sensors_removed(hass: HomeAssistant, mock_atlona) -> Non
     entry = make_entry(mock_atlona.port)
     entry.add_to_hass(hass)
     registry = er.async_get(hass)
-    for suffix in ("status_timestamp", "power_timestamp"):
+    for suffix in ("status_timestamp", "power_timestamp", "communication_timestamp"):
         registry.async_get_or_create("sensor", DOMAIN, f"{entry.entry_id}_{suffix}", config_entry=entry)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert registry.async_get_entity_id("sensor", DOMAIN, f"{entry.entry_id}_status_timestamp") is None
     assert registry.async_get_entity_id("sensor", DOMAIN, f"{entry.entry_id}_power_timestamp") is None
-    assert eid(hass, "sensor", entry, "communication_timestamp")
+    assert registry.async_get_entity_id("sensor", DOMAIN, f"{entry.entry_id}_communication_timestamp") is None
+    assert eid(hass, "binary_sensor", entry, "connected")
     await unload(hass, entry)
 
 
@@ -144,3 +149,43 @@ async def test_diagnostics_redacts_password(hass: HomeAssistant, mock_atlona) ->
     assert diag["state"]["routing_output_to_input"][1] == 1
     assert any(row["dir"] == "TX" for row in diag["history"])
     await unload(hass, entry)
+
+
+async def test_translated_names(hass: HomeAssistant, mock_atlona) -> None:
+    entry = await setup_entry(hass, mock_atlona.port)
+    state = hass.states.get(eid(hass, "switch", entry, "output_2_enabled"))
+    assert state.attributes["friendly_name"] == "Atlona Bedroom video"
+    state = hass.states.get(eid(hass, "button", entry, "input_3_all"))
+    assert state.attributes["friendly_name"] == "Atlona PC to all outputs"
+    assert hass.states.get(eid(hass, "switch", entry, "power")).attributes["friendly_name"] == "Atlona Power"
+    await unload(hass, entry)
+
+
+async def test_unreachable_raises_and_clears_repair_issue(hass: HomeAssistant, mock_atlona) -> None:
+    entry = await setup_entry(hass, mock_atlona.port)
+    coordinator = entry.runtime_data
+    connected = eid(hass, "binary_sensor", entry, "connected")
+    issues = ir.async_get(hass)
+
+    await mock_atlona.stop()
+    await coordinator.client.close()
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.get(connected).state == STATE_OFF
+    assert hass.states.get(eid(hass, "select", entry, "output_1")).state == STATE_UNAVAILABLE
+    assert issues.async_get_issue(DOMAIN, coordinator.issue_id) is None  # not yet: < 5 min
+
+    coordinator._unreachable_since -= timedelta(minutes=6)
+    await coordinator.async_refresh()
+    assert issues.async_get_issue(DOMAIN, coordinator.issue_id) is not None
+
+    mock2 = await type(mock_atlona)().start()
+    try:
+        coordinator.client.port = mock2.port
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+        assert hass.states.get(connected).state == STATE_ON
+        assert issues.async_get_issue(DOMAIN, coordinator.issue_id) is None
+        await unload(hass, entry)
+    finally:
+        await mock2.stop()

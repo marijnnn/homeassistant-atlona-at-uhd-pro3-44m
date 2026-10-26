@@ -5,9 +5,13 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
+# Raise a Repairs issue when the matrix has been unreachable this long.
+UNREACHABLE_ISSUE_AFTER = timedelta(minutes=5)
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -60,6 +64,8 @@ class AtlonaCoordinator(DataUpdateCoordinator[AtlonaData]):
         self._status_last: datetime | None = None
         self._power_last: datetime | None = None
         self._last_comm: datetime | None = None
+        self._unreachable_since: datetime | None = None
+        self._issue_raised = False
         super().__init__(
             hass,
             _LOGGER,
@@ -70,6 +76,7 @@ class AtlonaCoordinator(DataUpdateCoordinator[AtlonaData]):
             ),
         )
         client.on_unsolicited = self._handle_unsolicited
+        client.on_connection_lost = self._handle_connection_lost
 
     # ------------------------------------------------------------ helpers
 
@@ -93,9 +100,53 @@ class AtlonaCoordinator(DataUpdateCoordinator[AtlonaData]):
         self._last_comm = dt_util.utcnow()
         self.async_set_updated_data(self._snapshot())
 
+    @callback
+    def _handle_connection_lost(self) -> None:
+        """Matrix closed the session: check (and reconnect) right away."""
+        self.hass.async_create_task(self.async_request_refresh())
+
+    @property
+    def issue_id(self) -> str:
+        return f"unreachable_{self.config_entry.entry_id}"
+
+    def _track_unreachable(self) -> None:
+        now = dt_util.utcnow()
+        if self._unreachable_since is None:
+            self._unreachable_since = now
+        elif not self._issue_raised and now - self._unreachable_since >= UNREACHABLE_ISSUE_AFTER:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                self.issue_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="unreachable",
+                translation_placeholders={
+                    "name": self.config_entry.title,
+                    "host": self.host,
+                    "minutes": str(int(UNREACHABLE_ISSUE_AFTER.total_seconds() // 60)),
+                },
+            )
+            self._issue_raised = True
+
+    def clear_unreachable(self) -> None:
+        self._unreachable_since = None
+        if self._issue_raised:
+            ir.async_delete_issue(self.hass, DOMAIN, self.issue_id)
+            self._issue_raised = False
+
     # ------------------------------------------------------------- polling
 
     async def _async_update_data(self) -> AtlonaData:
+        try:
+            data = await self._async_poll()
+        except UpdateFailed:
+            self._track_unreachable()
+            raise
+        self.clear_unreachable()
+        return data
+
+    async def _async_poll(self) -> AtlonaData:
         now = dt_util.utcnow()
         failures: list[str] = []
         try:

@@ -23,7 +23,8 @@ class AtlonaAllButton(AtlonaEntity, ButtonEntity):
     def __init__(self, coordinator: AtlonaCoordinator, input_no: int) -> None:
         super().__init__(coordinator, f"input_{input_no}_all")
         self.input_no = input_no
-        self._attr_name = f"{coordinator.names[f'input_{input_no}']} to all outputs"
+        self._attr_translation_key = "input_to_all"
+        self._attr_translation_placeholders = {"input": coordinator.names[f"input_{input_no}"]}
 
     async def async_press(self) -> None:
         await self.coordinator.async_route_all(self.input_no)
