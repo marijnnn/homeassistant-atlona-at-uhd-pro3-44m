@@ -1,0 +1,89 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Atlona AT-UHD-PRO3-44M",
+        "description": "Connection to the matrix (Telnet, default port 23). Username/password are only needed when Telnet login (IPLogin) is enabled on the matrix - this is the factory default.",
+        "data": {
+          "name": "Name",
+          "host": "IP address or hostname",
+          "port": "Telnet port",
+          "username": "Telnet username (optional)",
+          "password": "Telnet password (optional)",
+          "poll_interval": "Polling interval (seconds)",
+          "instant_updates": "Instant updates (enables Broadcast on the matrix)"
+        }
+      },
+      "names": {
+        "title": "Input and output names",
+        "description": "Names used for the routing selects and buttons. Output 5 is the HDMI output.",
+        "data": {
+          "input_1": "Input 1 name",
+          "input_2": "Input 2 name",
+          "input_3": "Input 3 name",
+          "input_4": "Input 4 name",
+          "output_1": "Output 1 name",
+          "output_2": "Output 2 name",
+          "output_3": "Output 3 name",
+          "output_4": "Output 4 name",
+          "output_5": "Output 5 name (HDMI)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the matrix. Check IP address/port and that no other Telnet session is blocking it.",
+      "invalid_auth": "The matrix asks for a Telnet login and the username/password is missing or wrong.",
+      "duplicate_input_names": "Input names must be unique.",
+      "empty_name": "Names cannot be empty.",
+      "unknown": "Unexpected error, see the log."
+    },
+    "abort": {
+      "already_configured": "This matrix is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "names": {
+        "title": "Input and output names",
+        "description": "Names used for the routing selects and buttons. Output 5 is the HDMI output.",
+        "data": {
+          "input_1": "Input 1 name",
+          "input_2": "Input 2 name",
+          "input_3": "Input 3 name",
+          "input_4": "Input 4 name",
+          "output_1": "Output 1 name",
+          "output_2": "Output 2 name",
+          "output_3": "Output 3 name",
+          "output_4": "Output 4 name",
+          "output_5": "Output 5 name (HDMI)"
+        }
+      },
+      "connection": {
+        "title": "Connection and polling",
+        "description": "Connection to the matrix (Telnet, default port 23). Username/password are only needed when Telnet login (IPLogin) is enabled on the matrix - this is the factory default.",
+        "data": {
+          "host": "IP address or hostname",
+          "port": "Telnet port",
+          "username": "Telnet username (optional)",
+          "password": "Telnet password (optional)",
+          "poll_interval": "Polling interval (seconds)",
+          "instant_updates": "Instant updates (enables Broadcast on the matrix)"
+        }
+      },
+      "init": {
+        "title": "Atlona Matrix",
+        "menu_options": {
+          "names": "Input and output names",
+          "connection": "Connection and polling"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the matrix. Check IP address/port and that no other Telnet session is blocking it.",
+      "invalid_auth": "The matrix asks for a Telnet login and the username/password is missing or wrong.",
+      "duplicate_input_names": "Input names must be unique.",
+      "empty_name": "Names cannot be empty.",
+      "unknown": "Unexpected error, see the log."
+    }
+  }
+}

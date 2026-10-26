@@ -1,0 +1,24 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check that manifest version matches the tag
+        run: |
+          v=$(python3 -c "import json;print(json.load(open('custom_components/atlona_matrix/manifest.json'))['version'])")
+          [ "v$v" = "${GITHUB_REF_NAME}" ] || { echo "manifest version $v != tag ${GITHUB_REF_NAME}"; exit 1; }
+      - name: Zip integration (for manual installs)
+        run: cd custom_components && zip -r ../atlona_matrix.zip atlona_matrix -x '*/__pycache__/*'
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: atlona_matrix.zip
+          generate_release_notes: true

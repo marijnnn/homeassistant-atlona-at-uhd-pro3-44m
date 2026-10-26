@@ -1,0 +1,89 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Atlona AT-UHD-PRO3-44M",
+        "description": "Verbinding met de matrix (Telnet, standaard poort 23). Gebruikersnaam/wachtwoord zijn alleen nodig als Telnet-login (IPLogin) op de matrix aan staat - dat is de fabrieksinstelling.",
+        "data": {
+          "name": "Naam",
+          "host": "IP-adres of hostnaam",
+          "port": "Telnet-poort",
+          "username": "Telnet-gebruikersnaam (optioneel)",
+          "password": "Telnet-wachtwoord (optioneel)",
+          "poll_interval": "Poll-interval (seconden)",
+          "instant_updates": "Directe updates (zet Broadcast aan op de matrix)"
+        }
+      },
+      "names": {
+        "title": "Namen van in- en uitgangen",
+        "description": "Namen voor de routing-selects en knoppen. Uitgang 5 is de HDMI-uitgang.",
+        "data": {
+          "input_1": "Naam ingang 1",
+          "input_2": "Naam ingang 2",
+          "input_3": "Naam ingang 3",
+          "input_4": "Naam ingang 4",
+          "output_1": "Naam uitgang 1",
+          "output_2": "Naam uitgang 2",
+          "output_3": "Naam uitgang 3",
+          "output_4": "Naam uitgang 4",
+          "output_5": "Naam uitgang 5 (HDMI)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken met de matrix. Controleer IP-adres/poort en of geen andere Telnet-sessie de verbinding blokkeert.",
+      "invalid_auth": "De matrix vraagt om een Telnet-login en gebruikersnaam/wachtwoord ontbreekt of is onjuist.",
+      "duplicate_input_names": "Namen van ingangen moeten uniek zijn.",
+      "empty_name": "Namen mogen niet leeg zijn.",
+      "unknown": "Onverwachte fout, zie het logboek."
+    },
+    "abort": {
+      "already_configured": "Deze matrix is al geconfigureerd."
+    }
+  },
+  "options": {
+    "step": {
+      "names": {
+        "title": "Namen van in- en uitgangen",
+        "description": "Namen voor de routing-selects en knoppen. Uitgang 5 is de HDMI-uitgang.",
+        "data": {
+          "input_1": "Naam ingang 1",
+          "input_2": "Naam ingang 2",
+          "input_3": "Naam ingang 3",
+          "input_4": "Naam ingang 4",
+          "output_1": "Naam uitgang 1",
+          "output_2": "Naam uitgang 2",
+          "output_3": "Naam uitgang 3",
+          "output_4": "Naam uitgang 4",
+          "output_5": "Naam uitgang 5 (HDMI)"
+        }
+      },
+      "connection": {
+        "title": "Verbinding en polling",
+        "description": "Verbinding met de matrix (Telnet, standaard poort 23). Gebruikersnaam/wachtwoord zijn alleen nodig als Telnet-login (IPLogin) op de matrix aan staat - dat is de fabrieksinstelling.",
+        "data": {
+          "host": "IP-adres of hostnaam",
+          "port": "Telnet-poort",
+          "username": "Telnet-gebruikersnaam (optioneel)",
+          "password": "Telnet-wachtwoord (optioneel)",
+          "poll_interval": "Poll-interval (seconden)",
+          "instant_updates": "Directe updates (zet Broadcast aan op de matrix)"
+        }
+      },
+      "init": {
+        "title": "Atlona Matrix",
+        "menu_options": {
+          "names": "Namen van in- en uitgangen",
+          "connection": "Verbinding en polling"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken met de matrix. Controleer IP-adres/poort en of geen andere Telnet-sessie de verbinding blokkeert.",
+      "invalid_auth": "De matrix vraagt om een Telnet-login en gebruikersnaam/wachtwoord ontbreekt of is onjuist.",
+      "duplicate_input_names": "Namen van ingangen moeten uniek zijn.",
+      "empty_name": "Namen mogen niet leeg zijn.",
+      "unknown": "Onverwachte fout, zie het logboek."
+    }
+  }
+}
